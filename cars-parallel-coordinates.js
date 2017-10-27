@@ -21,7 +21,7 @@ function buildParallelCoordinates(data, popt, toggleArray){
 			alpha = 20, // distance between two secondary axes
 			beta = 0.5; // scale down factor to accomodate all categories
 	
-			var gamma = 0.25; // cpx points. represents 25% of space between secondary and nearest primary axis
+			var gamma = 0.25; // cpx points. represents 25% of space between secondary and nearest primary axis (max curviness is 0.25)
 
 	var leftOffset = 50,
 			bottomOffset = 40,
@@ -50,39 +50,40 @@ function buildParallelCoordinates(data, popt, toggleArray){
 			var disBetAxes = x(dimensions[1]) - x(dimensions[0]);
 			
 			for (var dimIdx = 0; dimIdx < dimensions.length; dimIdx++) {
-				var currDim = dimensions[dimIdx];
+				var cDim = dimensions[dimIdx];
 
-				var path = d3.path(),
+				var path  = d3.path(),
 						path2 = d3.path();
 				
 				var ypos     = bottomOffset;
 				var yscales  = [];
 				for (var catIdx = 0; catIdx < numOfCategories; catIdx++){
 
-						var catFiltered = _.filter(data, function(d){
+						var catFiltered = _.filter(data, function(d) {
 							return d.category === categories[catIdx];
 						});
 						
-						catFiltered = _.pluck(catFiltered, currDim);
+						catFiltered = _.pluck(catFiltered, cDim);
 
 						yscales.push(d3.scaleLinear()
 															.domain([_.max(catFiltered), _.min(catFiltered)])
 															.range([ypos, ypos+lineSize]));
 
-
-						if (dimIdx !== dimensions.length-1){ // dont make Wis and Wi+1 for last dim
-							path.moveTo(x(currDim)+leftOffset, ypos);
-							path2.moveTo(x(currDim)+leftOffset+nextOffset, ypos);
+						if (dimIdx !== dimensions.length-1) { // dont make Wis and Wi+1 for last dim
+							path.moveTo(x(cDim)+leftOffset, ypos);
+							path2.moveTo(x(cDim)+leftOffset+nextOffset, ypos);
 							ypos = ypos + lineSize;
-							path.lineTo(x(currDim)+leftOffset, ypos);
-							path2.lineTo(x(currDim)+leftOffset+nextOffset, ypos);
+							path.lineTo(x(cDim)+leftOffset, ypos);
+							path2.lineTo(x(cDim)+leftOffset+nextOffset, ypos);
+						}else{
+							ypos = ypos + lineSize;
 						}
-						
+
 						ypos = ypos + bottomOffset;
 						
 				}
 
-				yy[currDim] = yscales;
+				yy[cDim] = yscales;
 				
 				svg.append("path").attr("d", path).attr("stroke", "#000");
 				svg.append("path").attr("d", path2).attr("stroke", "#000");
@@ -185,30 +186,20 @@ function buildParallelCoordinates(data, popt, toggleArray){
 		var cDim, nDim;
 
 		for (var dimIdx = 0; dimIdx < dimensions.length - 1; dimIdx++){
-			cDim = dimensions[dimIdx];
-			nDim = dimensions[dimIdx+1];
-		
-					// pos in Xi axis
-					// linePoints.push([x(cDim), y[cDim](d[cDim])]);
-					path.moveTo(x(cDim), y[cDim](d[cDim]));
+				cDim = dimensions[dimIdx];
+				nDim = dimensions[dimIdx+1];
 
-					var cpx = x(cDim) + leftOffset/2;
-					path.bezierCurveTo(cpx, y[cDim](d[cDim]), cpx, yy[cDim][categoryIdx](d[cDim]), x(cDim)+leftOffset, yy[cDim][categoryIdx](d[cDim]));
+				path.moveTo(x(cDim), y[cDim](d[cDim]));
 
-					path.lineTo(x(cDim)+leftOffset+nextOffset, yy[nDim][categoryIdx](d[nDim]));
+				var cpx1 = x(cDim) + leftOffset*gamma,
+						cpx2 = x(cDim) + leftOffset -leftOffset*gamma;
+				path.bezierCurveTo(cpx1, y[cDim](d[cDim]), cpx2, yy[cDim][categoryIdx](d[cDim]), x(cDim)+leftOffset, yy[cDim][categoryIdx](d[cDim]));
 
-					cpx = x(nDim) - leftOffset/2;
-					path.bezierCurveTo(cpx, y[nDim](d[nDim]), cpx, y[nDim](d[nDim]), x(nDim), y[nDim](d[nDim]));
-					// pos in Wi axis
-					// linePoints.push([x(cDim)+leftOffset, yy[cDim][categoryIdx](d[cDim])]);
+				path.lineTo(x(cDim)+leftOffset+nextOffset, yy[nDim][categoryIdx](d[nDim]));
 
-					// pos in Wi+1 axis
-					// linePoints.push([x(cDim)+leftOffset+nextOffset, y[nDim][categoryIdx](d[nDim])]);
-
+				cpx = x(nDim) - leftOffset*gamma;
+				path.bezierCurveTo(cpx, y[nDim](d[nDim]), cpx, y[nDim](d[nDim]), x(nDim), y[nDim](d[nDim]));
 		}
-		// cDim = dimensions[dimIdx];	
-		// linePoints.push([x(cDim), y[cDim](d[cDim])]);
-
 		return path;
 	}
 	
