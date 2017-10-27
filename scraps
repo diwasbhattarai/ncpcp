@@ -1,0 +1,59 @@
+var z = d3.interpolateCool;
+    var carsCls = {};
+    for (var dimen in dimensions){
+        dimen = dimensions[dimen];
+        
+        carsCls[dimen] = _.unique(cars.filter(function(d){
+                var scale = y[dimen];
+    
+                var umean = scale(stats[dimen][1].mean),
+                        umax = stats[dimen][1].max,
+                        umin = stats[dimen][1].min;
+                
+                var lmean = scale(stats[dimen][0].mean),
+                        lmax = stats[dimen][0].max,
+                        lmin = stats[dimen][0].min;
+                
+                return d[dimen] === lmin || d[dimen] === lmax || 
+                       d[dimen] === umin || d[dimen] === umax;
+            
+        }), function(d){return d[dimen];});
+        
+        carsCls[dimen] = _.sortBy(carsCls, function(d){return +d[dimen];});
+        var pointsCls = _.map(carsCls, function(d){
+
+                        return {dimen: [x(dimen), y[dimen](d[dimen])]};
+                });
+        
+    }
+
+    debugger;
+    
+    var path = d3.path();
+    path.moveTo(pointsCls[0][0], pointsCls[0][1]);
+    
+    var cx1 = pointsCls[0][0] + r_axis/2;
+    var cx2 = cx1;
+    var cy1 = pointsCls[0][1];
+    var cy2 = stats[dim][0].mean + clusterScale * (pointsCls[0][1] - stats[dim][0].mean);
+
+    path.bezierCurveTo(cx1, cy1, cx2, cy2, pointsCls[0][0]+r_axis, cy2);
+    
+    cy2 = stats[dim][0].mean + clusterScale * (pointsCls[1][1] - stats[dim][0].mean);
+    path.lineTo(pointsCls[0][0]+r_axis, stats[dim][0].mean + clusterScale * (pointsCls[1][1] - stats[dim][0].mean));
+
+    path.moveTo(pointsCls[1][0], pointsCls[1][1]);
+
+
+    var cx1 = pointsCls[1][0] + r_axis/2;
+    var cx2 = cx1;
+    var cy1 = pointsCls[1][1];
+    var cy2 = stats[dim][0].mean + clusterScale * (pointsCls[1][1] - stats[dim][0].mean);
+
+    path.bezierCurveTo(cx1, cy1, cx2, cy2, pointsCls[1][0]+r_axis, cy2);
+
+
+    path.moveTo(pointsCls[1][0], pointsCls[1][1]);
+
+    path.lineTo(pointsCls[0][0], pointsCls[0][1]);
+    path.closePath();
