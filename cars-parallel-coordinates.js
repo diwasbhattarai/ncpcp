@@ -15,26 +15,13 @@ function buildParallelCoordinates(data, popt, toggleArray){
 	
 	var categories = _.uniq(_.pluck(data, "category")),
 			numOfCategories = categories.length,
-			bbHeight = height / numOfCategories.length;
-			distFromX = 30,
-			minVSeperation = 5, // minimunm vertical separation
-			alpha = 20, // distance between two secondary axes
+			bbHeight = height / numOfCategories;
+			alpha = .20, // distance between two secondary axes
 			beta = 0.5; // scale down factor to accomodate all categories
 	
-			var gamma = 0.25; // cpx points. represents 25% of space between secondary and nearest primary axis (max curviness is 0.25)
-
-	var leftOffset = 50,
-			bottomOffset = 40,
-			nextOffset = 30,
-			lineSize = 30;
+	var gamma = 0.25; // cpx points. represents 25% of space between secondary and nearest primary axis (max curviness is 0.25)
 
 	var groups = _.groupBy(data, function(d){ return d['category'];});
-			
-	var svg = d3.select("body").append("svg")
-			.attr("width", width + margin.left + margin.right)
-			.attr("height", height + margin.top + margin.bottom)
-		  .append("g")
-			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
 
 	// Extract the list of dimensions and create a scale for each.
 	x.domain(dimensions = d3.keys(data[0]).filter(function(d) {
@@ -45,9 +32,21 @@ function buildParallelCoordinates(data, popt, toggleArray){
 			(yy[d] = d3.scaleLinear())}).slice(0,-1));
 									
 	
-
-
 			var disBetAxes = x(dimensions[1]) - x(dimensions[0]);
+	
+			var leftOffset = disBetAxes*(1-alpha)/2,
+			bottomOffset = 0.45*bbHeight,
+			nextOffset = disBetAxes*alpha,
+			lineSize = 0.500*bbHeight;
+
+			
+	var svg = d3.select("body").append("svg")
+			.attr("width", width + margin.left + margin.right)
+			.attr("height", height + margin.top + margin.bottom)
+		  .append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");		
+
+	
 			
 			for (var dimIdx = 0; dimIdx < dimensions.length; dimIdx++) {
 				var cDim = dimensions[dimIdx];
